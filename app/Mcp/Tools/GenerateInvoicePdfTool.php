@@ -26,26 +26,29 @@ class GenerateInvoicePdfTool extends Tool
     {
         $validated = $request->validate([
             'invoice_number' => ['required', 'string', 'max:100'],
-            'purchase_order' => ['nullable', 'string', 'max:100'],
-            'note_to_customer' => ['nullable', 'string', 'max:1000'],
+            'from_address' => ['nullable', 'string', 'max:500'],
             'bill_to_address' => ['required', 'string', 'max:500'],
-            'technician_phone' => ['nullable', 'string', 'max:50'],
-            'technician_email' => ['nullable', 'string', 'email', 'max:255'],
+            'ship_to_address' => ['nullable', 'string', 'max:500'],
+            'purchase_order' => ['nullable', 'string', 'max:100'],
+            'payment_terms' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'terms' => ['nullable', 'string', 'max:1000'],
             'line_items' => ['required', 'array', 'min:1'],
-            'line_items.*.sku' => ['nullable', 'string', 'max:100'],
-            'line_items.*.stock' => ['nullable', 'string', 'max:100'],
-            'line_items.*.vin' => ['nullable', 'string', 'max:50'],
-            'line_items.*.year_make_model' => ['nullable', 'string', 'max:200'],
+            'line_items.*.description' => ['nullable', 'string', 'max:500'],
             'line_items.*.quantity' => ['nullable', 'integer', 'min:1'],
-            'line_items.*.price' => ['required', 'numeric', 'min:0'],
+            'line_items.*.rate' => ['required', 'numeric', 'min:0'],
+            'tax_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'discount' => ['nullable', 'numeric', 'min:0'],
+            'shipping' => ['nullable', 'numeric', 'min:0'],
+            'amount_paid' => ['nullable', 'numeric', 'min:0'],
             'logo_base64' => ['nullable', 'string'],
         ], [
-            'invoice_number.required' => 'An invoice number is required. Example: "INV-2024-001".',
+            'invoice_number.required' => 'An invoice number is required. Example: "INV-001".',
             'bill_to_address.required' => 'A bill-to address is required for the invoice.',
             'line_items.required' => 'At least one line item is required.',
             'line_items.min' => 'At least one line item is required.',
-            'line_items.*.price.required' => 'Each line item must have a price.',
-            'line_items.*.price.numeric' => 'Each line item price must be a number.',
+            'line_items.*.rate.required' => 'Each line item must have a rate.',
+            'line_items.*.rate.numeric' => 'Each line item rate must be a number.',
         ]);
 
         $pdfContent = $invoiceService->generate($validated);
@@ -66,40 +69,55 @@ class GenerateInvoicePdfTool extends Tool
     {
         return [
             'invoice_number' => $schema->string()
-                ->description('The invoice number (e.g., "INV-2024-001").')
+                ->description('The invoice number (e.g., "INV-001").')
                 ->required(),
 
-            'purchase_order' => $schema->string()
-                ->description('Optional purchase order reference number.'),
-
-            'note_to_customer' => $schema->string()
-                ->description('Optional note to display on the invoice.'),
+            'from_address' => $schema->string()
+                ->description('The sender/company address (who is this from?).'),
 
             'bill_to_address' => $schema->string()
                 ->description('The billing address for the customer.')
                 ->required(),
 
-            'technician_phone' => $schema->string()
-                ->description('Technician phone number to display on the invoice.'),
+            'ship_to_address' => $schema->string()
+                ->description('Optional shipping address if different from billing.'),
 
-            'technician_email' => $schema->string()
-                ->description('Technician email address to display on the invoice.'),
+            'purchase_order' => $schema->string()
+                ->description('Optional PO number reference.'),
+
+            'payment_terms' => $schema->string()
+                ->description('Payment terms (e.g., "Net 30", "Due on Receipt").'),
+
+            'notes' => $schema->string()
+                ->description('Additional notes to display on the invoice.'),
+
+            'terms' => $schema->string()
+                ->description('Terms and conditions for the invoice.'),
 
             'line_items' => $schema->array()
                 ->description('Array of line items for the invoice.')
                 ->items(
                     $schema->object()
                         ->properties([
-                            'sku' => $schema->string()->description('Product SKU.'),
-                            'stock' => $schema->string()->description('Stock number.'),
-                            'vin' => $schema->string()->description('Vehicle Identification Number.'),
-                            'year_make_model' => $schema->string()->description('Vehicle year, make, and model.'),
+                            'description' => $schema->string()->description('Description of item/service.'),
                             'quantity' => $schema->integer()->description('Quantity of items.')->default(1),
-                            'price' => $schema->number()->description('Price per item.'),
+                            'rate' => $schema->number()->description('Rate/price per item.'),
                         ])
-                        ->required(['price'])
+                        ->required(['rate'])
                 )
                 ->required(),
+
+            'tax_percent' => $schema->number()
+                ->description('Tax percentage to apply (e.g., 8.25 for 8.25%).'),
+
+            'discount' => $schema->number()
+                ->description('Discount amount to subtract from total.'),
+
+            'shipping' => $schema->number()
+                ->description('Shipping cost to add to total.'),
+
+            'amount_paid' => $schema->number()
+                ->description('Amount already paid (subtracted from balance due).'),
 
             'logo_base64' => $schema->string()
                 ->description('Base64-encoded company logo image.'),
