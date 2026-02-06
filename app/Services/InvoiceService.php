@@ -59,13 +59,13 @@ class InvoiceService
 
         $viewData = [
             'invoice_number' => $data['invoice_number'],
-            'from_address' => $data['from_address'] ?? $defaults['from_address'] ?? '',
-            'bill_to_address' => $data['bill_to_address'],
-            'ship_to_address' => $data['ship_to_address'] ?? '',
+            'from_address' => $this->normalizeNewlines($data['from_address'] ?? $defaults['from_address'] ?? ''),
+            'bill_to_address' => $this->normalizeNewlines($data['bill_to_address']),
+            'ship_to_address' => $this->normalizeNewlines($data['ship_to_address'] ?? ''),
             'purchase_order' => $data['purchase_order'] ?? '',
             'payment_terms' => $data['payment_terms'] ?? $defaults['payment_terms'] ?? '',
-            'notes' => $data['notes'] ?? $defaults['notes'] ?? '',
-            'terms' => $data['terms'] ?? $defaults['terms'] ?? '',
+            'notes' => $this->normalizeNewlines($data['notes'] ?? $defaults['notes'] ?? ''),
+            'terms' => $this->normalizeNewlines($data['terms'] ?? $defaults['terms'] ?? ''),
             'line_items' => $lineItems,
             'logo_base64' => $logoBase64,
             'generated_date' => Carbon::now()->format('M d, Y'),
@@ -112,5 +112,13 @@ class InvoiceService
         return array_reduce($lineItems, function (float $carry, array $item): float {
             return $carry + ($item['quantity'] * $item['rate']);
         }, 0.0);
+    }
+
+    /**
+     * Convert literal \n strings to actual newlines.
+     */
+    private function normalizeNewlines(string $text): string
+    {
+        return str_replace('\n', "\n", $text);
     }
 }

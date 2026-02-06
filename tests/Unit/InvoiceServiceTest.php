@@ -197,5 +197,24 @@ describe('InvoiceService', function () {
 
             expect(strlen($pdf))->toBeGreaterThan(1000);
         });
+
+        it('converts literal backslash-n to actual newlines in addresses', function () {
+            $service = app(InvoiceService::class);
+
+            $pdf = $service->generate([
+                'invoice_number' => 'TEST-012',
+                'bill_to_address' => 'John Doe\n123 Main Street\nNew York, NY 10001',
+                'from_address' => 'Acme Corp\n456 Business Ave\nLos Angeles, CA 90001',
+                'ship_to_address' => 'Jane Doe\n789 Other St\nChicago, IL 60601',
+                'notes' => 'Thank you for your business!\nPlease pay within 30 days.',
+                'terms' => 'Payment due on receipt.\nLate fees may apply.',
+                'line_items' => [
+                    ['description' => 'Service', 'rate' => 100.00],
+                ],
+            ]);
+
+            expect($pdf)->toBeString();
+            expect(strlen($pdf))->toBeGreaterThan(1000);
+        });
     });
 });
