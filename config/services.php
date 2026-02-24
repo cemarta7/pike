@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'forge' => [
+        'token' => env('FORGE_API_TOKEN'),
+        'server_id' => env('FORGE_SERVER_ID'),
+    ],
+
 ];
