@@ -88,12 +88,34 @@ describe('Forge MCP Tools', function () {
         });
     });
 
+    describe('ForgeGetSiteDomainsTool', function () {
+        it('returns site domains', function () {
+            mock(ForgeService::class)
+                ->shouldReceive('getSiteDomains')
+                ->once()
+                ->with(1)
+                ->andReturn(['example.com', 'www.example.com']);
+
+            $response = PikeServer::tool(ForgeGetSiteDomainsTool::class, [
+                'site_id' => 1,
+            ]);
+
+            $response->assertOk();
+        });
+
+        it('validates site_id is required', function () {
+            $response = PikeServer::tool(ForgeGetSiteDomainsTool::class, []);
+
+            $response->assertHasErrors();
+        });
+    });
+
     describe('ForgeCreateSiteTool', function () {
         it('creates a site with required fields', function () {
             mock(ForgeService::class)
                 ->shouldReceive('createSite')
                 ->once()
-                ->with('example.com', 'php', 'php83')
+                ->with('example.com', 'php', 'php83', true)
                 ->andReturn(new Site(['id' => 1, 'name' => 'example.com', 'status' => 'installed', 'phpVersion' => 'php83']));
 
             $response = PikeServer::tool(ForgeCreateSiteTool::class, [

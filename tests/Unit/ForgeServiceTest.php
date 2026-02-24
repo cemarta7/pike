@@ -147,26 +147,41 @@ describe('ForgeService', function () {
     });
 
     describe('getSiteDomains()', function () {
-        it('returns primary domain and aliases', function () {
-            $site = new Site(['id' => 1, 'name' => 'example.com', 'aliases' => ['www.example.com', 'app.example.com']]);
+        it('returns primary domain, aliases, and certificate domains', function () {
+            $site = new Site(['id' => 1, 'name' => 'example.com', 'aliases' => ['www.example.com']]);
 
             $this->forge->shouldReceive('site')
                 ->once()
                 ->with(123, 1)
                 ->andReturn($site);
 
+            $this->forge->shouldReceive('certificates')
+                ->once()
+                ->with(123, 1)
+                ->andReturn([
+                    new Certificate(['domain' => 'example.com']),
+                    new Certificate(['domain' => 'custom.example.com']),
+                ]);
+
             $result = $this->service->getSiteDomains(1);
 
-            expect($result)->toBe(['example.com', 'www.example.com', 'app.example.com']);
+            expect($result)->toBe(['example.com', 'www.example.com', 'custom.example.com']);
         });
 
-        it('returns only primary domain when no aliases', function () {
+        it('returns only primary domain when no aliases or extra certs', function () {
             $site = new Site(['id' => 1, 'name' => 'example.com', 'aliases' => []]);
 
             $this->forge->shouldReceive('site')
                 ->once()
                 ->with(123, 1)
                 ->andReturn($site);
+
+            $this->forge->shouldReceive('certificates')
+                ->once()
+                ->with(123, 1)
+                ->andReturn([
+                    new Certificate(['domain' => 'example.com']),
+                ]);
 
             $result = $this->service->getSiteDomains(1);
 

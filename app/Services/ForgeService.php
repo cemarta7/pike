@@ -66,15 +66,31 @@ class ForgeService
     }
 
     /**
-     * Get the aliases/domains for a site.
+     * Get all domains for a site (primary, aliases, and certificate domains).
      *
      * @return array<int, string>
      */
     public function getSiteDomains(int $siteId): array
     {
-        $site = $this->forge->site($this->serverId(), $siteId);
+        $serverId = $this->serverId();
+        $site = $this->forge->site($serverId, $siteId);
 
-        return array_merge([$site->name], $site->aliases ?? []);
+        $domains = [$site->name];
+
+        foreach ($site->aliases ?? [] as $alias) {
+            if (! in_array($alias, $domains)) {
+                $domains[] = $alias;
+            }
+        }
+
+        $certificates = $this->forge->certificates($serverId, $siteId);
+        foreach ($certificates as $certificate) {
+            if ($certificate->domain && ! in_array($certificate->domain, $domains)) {
+                $domains[] = $certificate->domain;
+            }
+        }
+
+        return $domains;
     }
 
     /**

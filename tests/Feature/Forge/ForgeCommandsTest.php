@@ -63,12 +63,25 @@ describe('Forge Artisan Commands', function () {
         });
     });
 
+    describe('forge:site-domains', function () {
+        it('lists site domains', function () {
+            mock(ForgeService::class)
+                ->shouldReceive('getSiteDomains')
+                ->once()
+                ->with(1)
+                ->andReturn(['example.com', 'www.example.com', 'app.example.com']);
+
+            $this->artisan('forge:site-domains', ['site_id' => 1])
+                ->assertSuccessful();
+        });
+    });
+
     describe('forge:create-site', function () {
-        it('creates a site', function () {
+        it('creates an isolated site by default', function () {
             mock(ForgeService::class)
                 ->shouldReceive('createSite')
                 ->once()
-                ->with('example.com', 'php', 'php83')
+                ->with('example.com', 'php', 'php83', true)
                 ->andReturn(new Site(['id' => 1, 'name' => 'example.com', 'status' => 'installed', 'phpVersion' => 'php83']));
 
             $this->artisan('forge:create-site', ['domain' => 'example.com'])
